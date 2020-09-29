@@ -2,6 +2,7 @@
 
 namespace App\Tests;
 
+use Exception;
 use GuzzleHttp\Client;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -11,6 +12,7 @@ class FileUploaderTest extends WebTestCase
     private $client;
     private $filepath;
     private $uploadFile;
+    private $resultFile;
 
     public function setup(): void
     {
@@ -21,6 +23,10 @@ class FileUploaderTest extends WebTestCase
             mime_content_type($this->filepath),
             null
         );
+        $this->resultFile = dirname(__FILE__, 2) . '/var/result/'. date('YmdHis') . '.html';
+        if(!file_exists(dirname($this->resultFile))) {
+            mkdir(dirname($this->resultFile), 0777, true);
+        }
     }
 
     public function testSomething()
@@ -31,9 +37,15 @@ class FileUploaderTest extends WebTestCase
             'upload[]' => $this->uploadFile,
         ]);
 
-        $response = $this->client->getResponse()->getContent();
+        $response = $this->client->getResponse();
+        if ($response->getStatusCode() !== 200) {
+            file_put_contents($this->resultFile, $response->getContent());
+            throw new Exception($response->getStatusCode());
+        }
+        $content = $response->getContent();
+        print_r($content);
 
-        $this->assertJson($response, '返回的信息不是 JSON 数组！' . PHP_EOL . $response);
+        $this->assertJson($content, '返回的信息不是 JSON 数组！' . PHP_EOL . $content);
     }
 
     public function testByGuzzleHttp()
@@ -67,6 +79,6 @@ class FileUploaderTest extends WebTestCase
 
     public function tearDown(): void
     {
-        unlink($this->filepath);
+        @unlink($this->filepath);
     }
 }
