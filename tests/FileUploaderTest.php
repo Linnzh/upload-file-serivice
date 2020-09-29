@@ -2,30 +2,71 @@
 
 namespace App\Tests;
 
+use GuzzleHttp\Client;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class FileUploaderTest extends WebTestCase
 {
-    public function testSomething()
-    {
-        $client = static::createClient();
+    private $client;
+    private $filepath;
+    private $uploadFile;
 
-        $filepath = dirname(__FILE__, 2).'/.phpunit.result.cache';
-        $file = new UploadedFile(
-            $filepath,
-            basename($filepath),
-            mime_content_type($filepath),
+    public function setup(): void
+    {
+        $this->filepath = tempnam(dirname(__FILE__, 2) . '/var/cache', 'upload_');
+        $this->uploadFile = new UploadedFile(
+            $this->filepath,
+            basename($this->filepath),
+            mime_content_type($this->filepath),
             null
         );
-        $client->request('POST', '/upload', [], [
-            'upload[]'=>$file,
-            'upload[]'=>$file,
+    }
+
+    public function testSomething()
+    {
+        $this->client = static::createClient();
+        $this->client->request('POST', '/upload', [], [
+            'upload[]' => $this->uploadFile,
+            'upload[]' => $this->uploadFile,
         ]);
 
-        $response = $client->getResponse()->getContent();
-        print_r($response);
+        $response = $this->client->getResponse()->getContent();
 
-        $this->assertJson($response, '返回的信息不是数组！'.$response);
+        $this->assertJson($response, '返回的信息不是 JSON 数组！' . PHP_EOL . $response);
+    }
+
+    public function testByGuzzleHttp()
+    {
+        $client = new Client([
+            'base_uri' => ''
+        ]);
+        $multipart = [];
+        $multipart[] = [
+            'name'     => 'upload',
+            'contents' => fopen($this->filepath, 'r'),
+            'filename' => basename($this->filepath),
+            'headers' => [
+                'Content-Type' => 'multipart/form-data',
+            ],
+        ];
+
+        $this->markTestSkipped(
+            '这里要求绝对路径，出错，暂时无法获取绝对路径'
+        );
+
+        // ! 这里要求绝对路径，出错，暂时无法获取绝对路径
+        $response = $client->request('POST', '/upload', [
+            'multipart' => $multipart
+        ]);
+
+        $response = $response->getBody()->getContents();
+
+        $this->assertJson($response, '返回的信息不是 JSON 数组！' . PHP_EOL . $response);
+    }
+
+    public function tearDown(): void
+    {
+        unlink($this->filepath);
     }
 }

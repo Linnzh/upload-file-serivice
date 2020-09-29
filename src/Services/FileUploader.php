@@ -67,7 +67,7 @@ class FileUploader
                 'mime_type' => $mimeType,
             ];
 
-            $imageSize = getimagesize($this->targetPath);
+            $imageSize = @getimagesize($this->targetPath);
             if ($imageSize !== false) {
                 $info['width'] = $imageSize[0];
                 $info['height'] = $imageSize[1];
