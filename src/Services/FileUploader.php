@@ -12,7 +12,7 @@ class FileUploader
     private $finalHost;
     private $finalUrl;
 
-    public function __construct(string $targetDirectory, ?string $targetHost)
+    public function __construct(string $targetDirectory, string $targetHost)
     {
         // TODO: 如果配置了 OSS 文件服务，需要给予 创建目录+写入+读取 的权限
         // DONE: 需要根据配置文件的 文件上传域名 判断该上传至哪个文件夹（在同一个服务器，但与代码分开存放
@@ -27,7 +27,7 @@ class FileUploader
         }
         $this->targetDirectory = $targetDirectory;
 
-        $this->finalHost = str_replace(dirname(__FILE__, 3) . '/public', '',  $this->targetDirectory);
+        $this->finalHost = str_replace([dirname(__FILE__, 3) . '/public', $targetDirectory], '',  $this->targetDirectory);
         if (!empty($targetHost)) {
             $this->finalHost = $targetHost . '/' . $this->finalHost;
         }
@@ -65,6 +65,7 @@ class FileUploader
                 'file_url' => $this->finalUrl,
                 'file_size' => $fileSize,
                 'mime_type' => $mimeType,
+                'target_host' => $this->finalHost,
             ];
 
             $imageSize = @getimagesize($this->targetPath);

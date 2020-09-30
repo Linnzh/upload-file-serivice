@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 trait Uploadable
 {
     /**
-     * @Route("/upload", name="upload")
+     * @Route("", name="upload")
      *
      * @param Request $request
      * @param FileUploader $fileUploader

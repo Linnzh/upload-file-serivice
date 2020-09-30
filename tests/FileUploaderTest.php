@@ -16,7 +16,8 @@ class FileUploaderTest extends WebTestCase
 
     public function setup(): void
     {
-        $this->filepath = tempnam(dirname(__FILE__, 2) . '/var/cache', 'upload_');
+        $this->filepath = dirname(__FILE__, 2) . '/var/cache/'.time().'.txt';
+        file_put_contents($this->filepath, time());
         $this->uploadFile = new UploadedFile(
             $this->filepath,
             basename($this->filepath),
@@ -32,7 +33,7 @@ class FileUploaderTest extends WebTestCase
     public function testSomething()
     {
         $this->client = static::createClient();
-        $this->client->request('POST', '/upload', [], [
+        $this->client->request('POST', '', [], [
             'upload[]' => $this->uploadFile,
             'upload[]' => $this->uploadFile,
         ]);
